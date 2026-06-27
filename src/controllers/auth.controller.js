@@ -32,6 +32,20 @@ async function registerUserController(req,  res) {
     { expiresIn: "1d" }
 
    )
+   res.cookie("token", token)
+    res.status(201).json({ message: "User registered successfully", user: { id: user._id, username: user.username, email: user.email },});
 }
+/**
+ * @name loginUserController
+ * @description login a user, expects email and password in the request body
+ * @access Public
+ */
+
+async function loginUserController(req, res) {
+    const { email, password } = req.body;
+    const user = await userModel.findOne({ email });
+    if(!user) {
+        return res.status(400).json({ message: "Invalid email or password" });
+    }
 
 module.exports = { registerUserController}
