@@ -30,16 +30,100 @@ const interviewReportSchema = z.object({
         tasks: z.array(z.string()).describe("List of tasks to be done on this day to follow the preparation plan, e.g. read a specific book or article, solve a set of problems, watch a video etc.")
     })).describe("A day-wise preparation plan for the candidate to follow in order to prepare for the interview effectively"),
     title: z.string().describe("The title of the job for which the interview report is generated"),
-})
+}).strict();
 
 async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
 
 
-    const prompt = `Generate an interview report for a candidate with the following details:
-                        Resume: ${resume}
-                        Self Description: ${selfDescription}
-                        Job Description: ${jobDescription}
-`
+//     const prompt = `Generate an interview report for a candidate with the following details:
+//                         Resume: ${resume}
+//                         Self Description: ${selfDescription}
+//                         Job Description: ${jobDescription}
+// `
+
+const prompt = `
+You are a Senior Software Engineer and Interviewer at Google.
+
+Your task is to analyze the candidate's Resume, Self Description, and Job Description.
+
+Return ONLY valid JSON.
+
+IMPORTANT RULES:
+
+- Do NOT return Markdown.
+- Do NOT return explanations.
+- Do NOT return text before or after the JSON.
+- Do NOT wrap the response inside \`\`\`.
+- Do NOT rename any field.
+- Do NOT omit any field.
+- Do NOT add extra fields.
+- Follow the schema EXACTLY.
+
+The JSON MUST contain these fields IN THIS ORDER:
+
+1. title
+2. matchScore
+3. technicalQuestions
+4. behavioralQuestions
+5. skillGaps
+6. preparationPlan
+
+For technicalQuestions generate 10 interview questions.
+
+Each question must contain:
+
+{
+  "question": "...",
+  "intention": "...",
+  "answer": "..."
+}
+
+For behavioralQuestions generate 8 interview questions.
+
+Each question must contain:
+
+{
+  "question": "...",
+  "intention": "...",
+  "answer": "..."
+}
+
+For skillGaps generate at least 3 skills.
+
+Each item must contain:
+
+{
+  "skill": "...",
+  "severity": "low | medium | high"
+}
+
+For preparationPlan generate a detailed 7-day preparation roadmap.
+
+Each day must contain:
+
+{
+  "day": 1,
+  "focus": "...",
+  "tasks": [
+    "...",
+    "...",
+    "..."
+  ]
+}
+
+The matchScore must be an integer between 0 and 100.
+
+Resume:
+${resume}
+
+Self Description:
+${selfDescription}
+
+Job Description:
+${jobDescription}
+
+Return ONLY JSON.
+`;
 
     const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
@@ -51,244 +135,35 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
         }
     })
 
-console.log("========== RAW RESPONSE ==========");
-console.log(response.text);
-console.log("==================================");
+//console.log(response.text);
+}
 
+try {
+
+    const report = interviewReportSchema.parse(
+        JSON.parse(response.text)
+    );
+
+    console.log("========== VALIDATED REPORT ==========");
+
+    console.log(
+        JSON.stringify(report, null, 2)
+    );
+
+    return report;
+
+} catch (error) {
+
+    console.log("========== RAW RESPONSE ==========");
+
+    console.log(response.text);
+
+    console.error(error);
+
+    throw error;
 }
 
 
 
 module.exports =  generateInterviewReport 
 
-
-// const { GoogleGenAI } = require("@google/genai");
-// const { z } = require("zod");
-// const { zodToJsonSchema } = require("zod-to-json-schema");
-
-// const ai = new GoogleGenAI({
-//   apiKey: process.env.GOOGLE_GENAI_API_KEY,
-// });
-
-// const interviewReportSchema = z.object({
-//   title: z.string(),
-
-//   matchScore: z.number().min(0).max(100),
-
-//   strengths: z.array(z.string()).min(3),
-
-//   weaknesses: z.array(z.string()).min(2),
-
-//   technicalQuestions: z.array(
-//     z.object({
-//       question: z.string(),
-//       intention: z.string(),
-//       answer: z.string(),
-//     })
-//   ).min(8),
-
-//   behavioralQuestions: z.array(
-//     z.object({
-//       question: z.string(),
-//       intention: z.string(),
-//       answer: z.string(),
-//     })
-//   ).min(5),
-
-//   codingQuestions: z.array(
-//     z.object({
-//       topic: z.string(),
-//       difficulty: z.enum(["Easy", "Medium", "Hard"]),
-//       question: z.string(),
-//       expectedApproach: z.string(),
-//     })
-//   ).min(5),
-
-//   projectQuestions: z.array(
-//     z.object({
-//       project: z.string(),
-//       question: z.string(),
-//       answer: z.string(),
-//     })
-//   ).min(3),
-
-//   skillGaps: z.array(
-//     z.object({
-//       skill: z.string(),
-//       severity: z.enum(["low", "medium", "high"]),
-//       recommendation: z.string(),
-//     })
-//   ).min(3),
-
-//   preparationPlan: z.array(
-//     z.object({
-//       day: z.number(),
-//       focus: z.string(),
-//       tasks: z.array(z.string()).min(2),
-//     })
-//   ).min(7),
-
-//   finalVerdict: z.object({
-//     recommendation: z.string(),
-//     confidence: z.number().min(0).max(100),
-//     summary: z.string(),
-//   }),
-// }).strict();
-
-// async function generateInterviewReport({
-//   resume,
-//   selfDescription,
-//   jobDescription,
-// }) {
-//   const prompt = `
-// You are a Senior Software Engineering Interviewer at Google.
-
-// Analyze the candidate.
-
-// Return ONLY ONE valid JSON object.
-
-// Do NOT return markdown.
-
-// Do NOT wrap inside \`\`\`.
-
-// Do NOT explain anything.
-
-// Do NOT rename fields.
-
-// Do NOT add extra fields.
-
-// Do NOT remove any fields.
-
-// Every field is required.
-
-// The JSON MUST exactly match this structure:
-
-// {
-// "title":string,
-// "matchScore":number,
-// "strengths":[string],
-// "weaknesses":[string],
-
-// "technicalQuestions":[
-// {
-// "question":string,
-// "intention":string,
-// "answer":string
-// }
-// ],
-
-// "behavioralQuestions":[
-// {
-// "question":string,
-// "intention":string,
-// "answer":string
-// }
-// ],
-
-// "codingQuestions":[
-// {
-// "topic":string,
-// "difficulty":"Easy|Medium|Hard",
-// "question":string,
-// "expectedApproach":string
-// }
-// ],
-
-// "projectQuestions":[
-// {
-// "project":string,
-// "question":string,
-// "answer":string
-// }
-// ],
-
-// "skillGaps":[
-// {
-// "skill":string,
-// "severity":"low|medium|high",
-// "recommendation":string
-// }
-// ],
-
-// "preparationPlan":[
-// {
-// "day":number,
-// "focus":string,
-// "tasks":[string]
-// }
-// ],
-
-// "finalVerdict":{
-// "recommendation":string,
-// "confidence":number,
-// "summary":string
-// }
-// }
-
-// Resume:
-// ${resume}
-
-// Self Description:
-// ${selfDescription}
-
-// Job Description:
-// ${jobDescription}
-// `;
-
-//   let attempts = 3;
-
-//   while (attempts > 0) {
-//     try {
-//       const response = await ai.models.generateContent({
-//         model: "gemini-3-flash-preview",
-//         contents: prompt,
-//         config: {
-//           responseMimeType: "application/json",
-//           responseSchema: zodToJsonSchema(interviewReportSchema),
-//           temperature: 0,
-//         },
-//       });
-
-//       console.log("\n========== RAW RESPONSE ==========\n");
-//       console.log(response.text);
-//       console.log("\n==================================\n");
-
-//       const json = JSON.parse(response.text);
-
-//       const validation = interviewReportSchema.safeParse(json);
-
-//       if (!validation.success) {
-//         console.log("\n❌ Validation Failed\n");
-//         console.dir(validation.error.format(), { depth: null });
-
-//         attempts--;
-
-//         if (attempts === 0) {
-//           throw new Error("Gemini returned invalid JSON after 3 attempts.");
-//         }
-
-//         console.log(`Retrying... (${attempts} attempts left)\n`);
-//         continue;
-//       }
-
-//       console.log("\n✅ JSON Validated Successfully\n");
-
-//       console.log(JSON.stringify(validation.data, null, 2));
-
-//       return validation.data;
-//     } catch (err) {
-//       attempts--;
-
-//       if (attempts === 0) {
-//         console.error("\n❌ Failed to Generate Report\n");
-//         throw err;
-//       }
-
-//       console.log(`Retrying... (${attempts} attempts left)\n`);
-//     }
-//   }
-// }
-
-// module.exports = {
-//   generateInterviewReport,
-// };
