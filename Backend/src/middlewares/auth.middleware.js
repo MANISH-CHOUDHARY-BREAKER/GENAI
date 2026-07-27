@@ -8,7 +8,7 @@ const tokenBlacklistModel = require("../models/blacklist.model");
     if(!token){
         return res.status(401).json({ message: "Token not provided" });
     }
-    const isTokenBlacklisted = await takenBlacklistModel.FindOne({
+    const isTokenBlacklisted = await tokenBlacklistModel.findOne({
       token
     })
 
@@ -30,4 +30,6 @@ const tokenBlacklistModel = require("../models/blacklist.model");
   }
 }
 
-module.exports = authUserMiddleware;
+module.exports = 
+   authUserMiddleware
+;

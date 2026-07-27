@@ -135,33 +135,11 @@ Return ONLY JSON.
         }
     })
 
+      return JSON.parse(response.text)
+
 //console.log(response.text);
 }
 
-try {
-
-    const report = interviewReportSchema.parse(
-        JSON.parse(response.text)
-    );
-
-    console.log("========== VALIDATED REPORT ==========");
-
-    console.log(
-        JSON.stringify(report, null, 2)
-    );
-
-    return report;
-
-} catch (error) {
-
-    console.log("========== RAW RESPONSE ==========");
-
-    console.log(response.text);
-
-    console.error(error);
-
-    throw error;
-}
 
 
 

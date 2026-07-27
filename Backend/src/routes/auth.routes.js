@@ -33,6 +33,9 @@ authRouter.get("/logout", authController.logoutUserController)
  * @description get the logged in user details
  * @access Private
  */
+console.log( typeof authController.getMeController);
+console.log(typeof authUserMiddleware);
+
 authRouter.get("/get-me", authUserMiddleware , authController.getMeController )
 
 module.exports = authRouter;
