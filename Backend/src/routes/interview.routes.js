@@ -15,4 +15,21 @@ console.log("authUser:", authMiddleware.authUser);
 console.log("upload:", upload);
 console.log("controller:", interviewController.generateInterViewReportController);
 interviewRouter.post("/", authMiddleware,upload.single("resume"), interviewController.generateInterViewReportController)
+
+/**
+ * @route GET /api/interview/report/:interviewId
+ * @description get interview report on the basis of interviewId.
+ * @access private
+ */
+interviewRouter.get("/report/:interviewId", authMiddleware, interviewController.getInterViewReportController)
+ 
+
+
+/**
+ * @route GET /api/interview/
+ * @description get all interview reports of logged in user.
+ * @access private
+ */
+interviewRouter.get("/", authMiddleware, interviewController.getAllInterViewReportsController)
+ 
 module.exports = interviewRouter;
